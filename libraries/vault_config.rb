@@ -39,11 +39,18 @@ module VaultCookbook
       attribute(:tls_disable, equal_to: [true, false, 1, 0, 'yes', 'no'], default: true)
       attribute(:tls_cert_file, kind_of: String)
       attribute(:tls_key_file, kind_of: String)
-      attribute(:tls_min_version, kind_of: String)
+      attribute(:tls_min_version, kind_of: String, default: 'tls12')
       attribute(:tls_cipher_suites, kind_of: String)
       attribute(:tls_prefer_server_cipher_suites, kind_of: String)
       attribute(:tls_require_and_verify_client_cert, kind_of: String)
       attribute(:tls_client_ca_file, kind_of: String)
+      attribute(:tls_disable_client_certs,  equal_to: [true, false], default: false)
+      attribute(:max_request_size, kind_of: Numeric)
+      attribute(:max_request_duration, kind_of: String)
+      attribute(:x_forwarded_for_authorized_addrs, kind_of: String)
+      attribute(:x_forwarded_for_hop_skips, kind_of: Numeric)
+      attribute(:x_forwarded_for_reject_not_authorized, kind_of: String, equal_to: ['true', 'false'])
+      attribute(:x_forwarded_for_reject_not_present, kind_of: String, equal_to: ['true', 'false'])
       # Global options
       attribute(:api_addr, kind_of: String)
       attribute(:cluster_name, kind_of: String)
@@ -52,6 +59,13 @@ module VaultCookbook
       attribute(:disable_mlock, equal_to: [true, false], default: false)
       attribute(:default_lease_ttl, kind_of: String)
       attribute(:max_lease_ttl, kind_of: String)
+      attribute(:plugin_directory, kind_of: String)
+      attribute(:pid_file, kind_of: String)
+      attribute(:log_level, kind_of: String)
+      attribute(:default_max_request_duration, kind_of: String)
+      attribute(:raw_storage_endpoint, equal_to: [true, false])
+      attribute(:ui, kind_of: String, equal_to: ['true', 'false'])
+
       # Storage options
       attribute(:storage_type, default: 'inmem', equal_to: %w(consul etcd zookeeper dynamodb s3 mysql postgresql inmem file))
       attribute(:storage_options, option_collector: true)
@@ -77,12 +91,12 @@ module VaultCookbook
       # @see https://vaultproject.io/docs/config/index.html
       def to_json
         # top-level
-        config_keeps = %i(api_addr cluster_name cache_size disable_cache disable_mlock default_lease_ttl max_lease_ttl)
+        config_keeps = %i(api_addr cluster_name cache_size disable_cache disable_mlock default_lease_ttl max_lease_ttl plugin_directory pid_file log_level default_max_request_duration raw_storage_endpoint ui)
         config = to_hash.keep_if do |k, _|
           config_keeps.include?(k.to_sym)
         end
         # listener
-        listener_keeps = %i(address cluster_address proxy_protocol_behavior proxy_protocol_authorized_addrs)
+        listener_keeps = %i(address cluster_address proxy_protocol_behavior proxy_protocol_authorized_addrs tls_disable_client_certs max_request_size max_request_duration x_forwarded_for_authorized_addrs x_forwarded_for_hop_skips x_forwarded_for_reject_not_authorized x_forwarded_for_reject_not_present)
         tls_params = %i(tls_cert_file tls_key_file tls_min_version tls_cipher_suites tls_prefer_server_cipher_suites tls_require_and_verify_client_cert tls_client_ca_file)
         listener_keeps += tls_params if tls?
         listener_options = to_hash.keep_if do |k, _|
